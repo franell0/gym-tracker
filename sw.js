@@ -1,11 +1,11 @@
 // Service worker: tiene l'app sul telefono così si apre anche senza rete.
 // La pagina si prende dalla rete quando c'è (così gli aggiornamenti arrivano da soli),
 // altrimenti dalla copia salvata. Font e icone si prendono dalla copia salvata.
-const CACHE = 'gym-v1';
+const CACHE = 'gym-v2';
 const FILES = ['./', './index.html', './fonts/archivo.woff2', './icon.png', './icon-180.png', './icon-192.png', './manifest.webmanifest'];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES.map(f => new Request(f, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', e => {
@@ -26,7 +26,7 @@ self.addEventListener('fetch', e => {
       const cache = await caches.open(CACHE);
       try {
         const res = await Promise.race([
-          fetch(req),
+          fetch(req, { cache: 'no-store' }),
           new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 4000))
         ]);
         if (res.ok) cache.put('./index.html', res.clone());

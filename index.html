@@ -208,6 +208,7 @@ h2{font-size:20px;font-weight:800;letter-spacing:-.015em;margin:30px 0 12px}
 #toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 12px);transform:translate(-50%,-160%);background:var(--ink);color:#fff;padding:12px 16px;border-radius:14px;font-size:14px;font-weight:600;transition:transform .25s;z-index:30;width:max-content;max-width:calc(100% - 32px);text-align:center}
 #toast.show{transform:translate(-50%,0)}
 #toast{display:flex;align-items:center;gap:14px;box-shadow:0 10px 30px rgba(0,0,0,.22);top:auto;bottom:calc(env(safe-area-inset-bottom) + 24px);transform:translate(-50%,calc(100% + 140px));transition:transform .45s cubic-bezier(.32,.72,0,1)}
+#toast[hidden]{display:none!important}
 #toast:not(.show){opacity:0;visibility:hidden;transition:transform .45s cubic-bezier(.32,.72,0,1),opacity .2s,visibility 0s .45s}body.has-tabs #toast{bottom:calc(env(safe-area-inset-bottom) + 84px)}
 body.in-session #toast{bottom:calc(env(safe-area-inset-bottom) + 236px)}
 body.in-session.no-sel #toast{bottom:calc(env(safe-area-inset-bottom) + 96px)}
@@ -301,7 +302,7 @@ body.in-session.no-sel #toast{bottom:calc(env(safe-area-inset-bottom) + 96px)}
 <div id="nav"></div>
 <div id="app"></div>
 <div id="fixed"></div>
-<div id="toast"></div>
+<div id="toast" hidden></div>
 <script>
 'use strict';
 /* ---------- Scheda (modifica qui per cambiare esercizi) ---------- */
@@ -392,9 +393,9 @@ const S=(()=>{let s=null;try{s=JSON.parse(localStorage.getItem(KEY))}catch(e){}
  o.q='';return o})();
 const UI={sheet:null,wk:0};
 function save(){try{const {q,...p}=S;localStorage.setItem(KEY,JSON.stringify(p))}catch(e){}}
-let toastT;function toast(msg,action){const t=$('#toast');t.innerHTML=`<span>${esc(msg)}</span>${action?`<button data-a="${action.a}">${esc(action.label)}</button>`:''}`;
- t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(hideToast,action?5000:2600)}
-function hideToast(){$('#toast').classList.remove('show');UI.undo=null}
+let toastT,toastH;function toast(msg,action){const t=$('#toast');t.innerHTML=`<span>${esc(msg)}</span>${action?`<button data-a="${action.a}">${esc(action.label)}</button>`:''}`;
+ clearTimeout(toastH);t.hidden=false;void t.offsetWidth;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(hideToast,action?5000:2600)}
+function hideToast(){const t=$('#toast');t.classList.remove('show');UI.undo=null;clearTimeout(toastH);toastH=setTimeout(()=>{if(!t.classList.contains('show')){t.hidden=true;t.innerHTML=''}},500)}
 
 /* ---------- Icone ---------- */
 const svg=(d,w)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w||2}" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg>`;
@@ -706,7 +707,7 @@ document.addEventListener('focusin',e=>{const t=e.target;if(t.dataset&&(t.datase
 document.addEventListener('focusout',e=>{const t=e.target,k=t.dataset&&t.dataset.in;if((k==='kg'||k==='reps')&&S.session){const x=S.session.sets[S.session.cur][S.session.sel];if(x)t.value=k==='kg'?fk(x.kg):x.reps}});
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.dataset&&['kg','reps'].includes(e.target.dataset.in))e.target.blur()});
 render();
-if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).catch(()=>{}));
 </script>
 </body>
 </html>
